@@ -10,6 +10,7 @@ Features illustrated in this example:
 - Optional time window to display only the most recent data points.
 - Automatic timestamping of output filenames.
 - Customizable plot titles and axis labels.
+- Custom marker styles for metrics.
 
 The resulting plots are saved in the "plots" directory by default.
 
@@ -32,6 +33,8 @@ xlabel : str, optional
     Label for the X-axis. Default is "Timestamp".
 ylabel : str, optional
     Label for the Y-axis. Default is "Metric Value".
+marker_styles : list[str], optional
+    List of marker styles for each metric. Default is None.
 """
 from __future__ import annotations
 
@@ -39,8 +42,16 @@ from matplotlib_tools import MetricsPlotter
 
 csv_filename = "metrics.csv"
 
-# Initialize the MetricsPlotter
-plotter = MetricsPlotter(csv_filename, dark_mode=True, verbose=False)
+# Custom marker styles for metrics
+custom_markers = ["o", "s", "^", "D"]
+
+# Initialize the MetricsPlotter with custom markers
+plotter = MetricsPlotter(
+    csv_file=csv_filename,
+    dark_mode=True,
+    verbose=False,
+    marker_styles=custom_markers,
+)
 
 # -------------------------
 # Static plot
