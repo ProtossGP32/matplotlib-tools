@@ -10,6 +10,7 @@ import logging
 import os
 from datetime import datetime
 
+import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.animation import FuncAnimation
@@ -27,6 +28,7 @@ class MetricsPlotter:
         output_dir: str = "plots",
         dark_mode: bool = False,
         verbose: bool = True,
+        marker_styles: list[str] | None = None,
     ):
         """
         Initialize MetricsPlotter.
@@ -41,11 +43,17 @@ class MetricsPlotter:
             Whether to apply dark mode style. Default is False.
         verbose : bool, optional
             If False, suppress matplotlib INFO logs. Default is True.
+        marker_styles : list[str] | None, optional
+            List of marker styles for each metric.
+            Defaults to ['o','s','^','D','v','x','*','+'].
         """
         self.csv_file = csv_file
         self.output_dir = output_dir
         self.dark_mode = dark_mode
         self.verbose = verbose
+        self.marker_styles = marker_styles or [
+            "o", "s", "^", "D", "v", "x", "*", "+",
+        ]
 
         self.styler = PlotStyler(output_dir=self.output_dir)
         self.styler.apply_style(dark_mode=self.dark_mode)
@@ -96,8 +104,8 @@ class MetricsPlotter:
             return
 
         self._plot_animated(
-            base_name, interval, time_window,
-            add_timestamp, title, xlabel, ylabel,
+            base_name, interval, time_window, add_timestamp,
+            title, xlabel, ylabel,
         )
 
     def _plot_static(
@@ -125,8 +133,17 @@ class MetricsPlotter:
             Label for the Y-axis.
         """
         fig, ax = plt.subplots()
-        for col in self.metric_cols:
-            ax.plot(self.df["timestamp"], self.df[col], label=col)
+        colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+
+        for i, col in enumerate(self.metric_cols):
+            ax.plot(
+                self.df["timestamp"],
+                self.df[col],
+                marker=self.marker_styles[i % len(self.marker_styles)],
+                linestyle="-",
+                color=colors[i % len(colors)],
+                label=col,
+            )
 
         ax.set_title(title)
         ax.set_xlabel(xlabel)
@@ -135,6 +152,8 @@ class MetricsPlotter:
 
         filename = f"{base_name}_static.png"
         self.styler.save_plot(filename, fig=fig, add_timestamp=add_timestamp)
+        if matplotlib.is_interactive():
+            plt.show()
         plt.close(fig)
 
     def _plot_animated(
@@ -169,10 +188,19 @@ class MetricsPlotter:
             Label for the Y-axis.
         """
         fig, ax = plt.subplots()
-        lines = {
-            col: ax.plot([], [], label=col)[0]
-            for col in self.metric_cols
-        }
+        lines = []
+        colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+
+        for i, col in enumerate(self.metric_cols):
+            line, = ax.plot(
+                [],
+                [],
+                marker=self.marker_styles[i % len(self.marker_styles)],
+                linestyle="-",
+                color=colors[i % len(colors)],
+                label=col,
+            )
+            lines.append(line)
 
         ax.set_title(title)
         ax.set_xlabel(xlabel)
@@ -180,21 +208,20 @@ class MetricsPlotter:
         ax.legend()
 
         def init():
-            for line in lines.values():
+            for line in lines:
                 line.set_data([], [])
-            return lines.values()
+            return lines
 
         def update(frame: int):
             current_data = self.df.iloc[: frame + 1]
 
-            if time_window is not None:
-                end_time = current_data['timestamp'].iloc[-1]
+            if time_window:
+                end_time = current_data["timestamp"].iloc[-1]
                 start_time = end_time - pd.Timedelta(seconds=time_window)
                 visible_data = current_data[
-                    current_data['timestamp']
+                    current_data["timestamp"]
                     >= start_time
                 ]
-
                 ax.set_xlim(start_time, end_time)
                 ymin = visible_data[self.metric_cols].min().min() - 1
                 ymax = visible_data[self.metric_cols].max().max() + 1
@@ -202,35 +229,36 @@ class MetricsPlotter:
             else:
                 visible_data = current_data
                 ax.set_xlim(
-                    self.df['timestamp'].min(),
-                    self.df['timestamp'].max(),
+                    self.df["timestamp"].min(),
+                    self.df["timestamp"].max(),
                 )
                 ax.set_ylim(
                     self.df[self.metric_cols].min().min() - 1,
                     self.df[self.metric_cols].max().max() + 1,
                 )
 
-            for col in self.metric_cols:
-                lines[col].set_data(
-                    visible_data["timestamp"], visible_data[col],
-                )
-            return lines.values()
+            for i, col in enumerate(self.metric_cols):
+                lines[i].set_data(visible_data["timestamp"], visible_data[col])
+            return lines
 
-        # Compose filename
-        filename = f"{base_name}_animated"
+        suffix = "animated"
         if time_window:
-            filename += f"_window_{time_window}s"
+            suffix += f"_window_{time_window}s"
         if self.dark_mode:
-            filename += "_dark_mode"
+            suffix += "_dark_mode"
         if add_timestamp:
             ts = datetime.now().strftime("%Y%m%d-%H%M%S")
-            filename += f"_{ts}"
+            suffix += f"_{ts}"
 
-        output_path = os.path.join(self.output_dir, f"{filename}.gif")
+        output_path = os.path.join(
+            self.output_dir, f"{base_name}_{suffix}.gif",
+        )
         ani = FuncAnimation(
-            fig, update, frames=len(self.df), init_func=init,
-            blit=False, interval=interval, repeat=False,
+            fig, update, frames=len(self.df),
+            init_func=init, blit=False, interval=interval,
         )
         ani.save(output_path, writer=PillowWriter(fps=1000 // interval))
         print(f"✅ Plot saved: {output_path}")
+        if matplotlib.is_interactive():
+            plt.show()
         plt.close(fig)
