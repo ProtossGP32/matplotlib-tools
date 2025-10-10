@@ -124,7 +124,7 @@ class PlotStyler:
         add_timestamp: bool = True,
         dpi: int = 300,
         metadata: dict | None = None,
-        fmt: str | None = None,
+        fmt: str | None = "png",
     ) -> str:
         """
         Save a Matplotlib figure with consistent formatting and metadata.
@@ -142,7 +142,7 @@ class PlotStyler:
         metadata : dict | None, optional
             Additional metadata to embed in the file.
         fmt : str | None, optional
-            Format override (e.g., "png", "pdf", "svg", "gif").
+            Format override (e.g., "png", "pdf", "gif", "eps").
 
         Returns
         -------
@@ -172,6 +172,9 @@ class PlotStyler:
         if fig is None:
             fig = plt.gcf()
 
-        fig.savefig(path, dpi=dpi, bbox_inches="tight", metadata=base_metadata)
+        fig.savefig(
+            path, dpi=dpi, bbox_inches="tight",
+            metadata=base_metadata, format=fmt,
+        )
         print(f"✅ Plot saved: {path}")
         return path

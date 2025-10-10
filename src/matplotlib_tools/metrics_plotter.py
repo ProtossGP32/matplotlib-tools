@@ -76,6 +76,7 @@ class MetricsPlotter:
         title: str = "Metrics Over Time",
         xlabel: str = "Timestamp",
         ylabel: str = "Value",
+        format: str = "png",
     ) -> None:
         """
         Plot or animate metrics.
@@ -96,11 +97,19 @@ class MetricsPlotter:
             X-axis label.
         ylabel : str
             Y-axis label.
+        format : str
+            Output format.
+            - Static formats: eps, jpeg, jpg, pdf, pgf, png,
+                    ps, raw, rgba, svg, svgz, tif, tiff, webp.
+            - Animated formats: gif.
         """
         base_name = os.path.splitext(os.path.basename(self.csv_file))[0]
 
         if not animate:
-            self._plot_static(base_name, add_timestamp, title, xlabel, ylabel)
+            self._plot_static(
+                base_name, add_timestamp,
+                title, xlabel, ylabel, format,
+            )
             return
 
         self._plot_animated(
@@ -115,6 +124,7 @@ class MetricsPlotter:
         title: str,
         xlabel: str,
         ylabel: str,
+        format: str = "png",
     ) -> None:
         """
         Generate and save a static metrics plot.
@@ -131,6 +141,9 @@ class MetricsPlotter:
             Label for the X-axis.
         ylabel : str
             Label for the Y-axis.
+        format : str
+            Output format (i.e: eps, jpeg, jpg, pdf, pgf,
+                png, ps, raw, rgba, svg, svgz, tif, tiff, webp).
         """
         fig, ax = plt.subplots()
         colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
@@ -150,8 +163,10 @@ class MetricsPlotter:
         ax.set_ylabel(ylabel)
         ax.legend()
 
-        filename = f"{base_name}_static.png"
-        self.styler.save_plot(filename, fig=fig, add_timestamp=add_timestamp)
+        filename = f"{base_name}_static.{format}"
+        self.styler.save_plot(
+            filename, fig=fig, add_timestamp=add_timestamp, fmt=format,
+        )
         if matplotlib.is_interactive():
             plt.show()
         plt.close(fig)

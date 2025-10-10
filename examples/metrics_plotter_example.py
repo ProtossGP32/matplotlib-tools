@@ -62,6 +62,7 @@ plotter.plot_or_animate_metrics(
     title="Static Metrics Over Time",
     xlabel="Timestamp",
     ylabel="Metric Value",
+    format="png",
 )
 
 # -------------------------
