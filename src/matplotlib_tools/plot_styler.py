@@ -1,9 +1,12 @@
+from __future__ import annotations
+
+import logging
 import os
 from datetime import datetime
-import logging
+
 import matplotlib.pyplot as plt
-from matplotlib import rcParams
 from cycler import cycler  # Fix for PyLance warning
+from matplotlib import rcParams
 from matplotlib.figure import Figure  # Correct type hint for save_plot
 
 
@@ -43,8 +46,10 @@ class PlotStyler:
         self.author = author
 
         # Define color palettes
-        self.light_colors = ["#4C72B0", "#55A868", "#C44E52", "#8172B3", "#CCB974", "#64B5CD"]
-        self.dark_colors = ["#A6CEE3", "#B2DF8A", "#FB9A99", "#CAB2D6", "#FFFF99", "#B3DE69"]
+        self.light_colors = ["#4C72B0", "#55A868",
+                             "#C44E52", "#8172B3", "#CCB974", "#64B5CD"]
+        self.dark_colors = ["#A6CEE3", "#B2DF8A",
+                            "#FB9A99", "#CAB2D6", "#FFFF99", "#B3DE69"]
 
         # Configure logging
         logging.basicConfig(

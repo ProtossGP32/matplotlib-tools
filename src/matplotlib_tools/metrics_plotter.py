@@ -1,11 +1,15 @@
-import os
-import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-from .plot_styler import PlotStyler
+from __future__ import annotations
+
 import logging
-import matplotlib
+import os
 from datetime import datetime
+
+import matplotlib
+import matplotlib.pyplot as plt
+import pandas as pd
+from matplotlib.animation import FuncAnimation
+
+from .plot_styler import PlotStyler
 
 
 class MetricsPlotter:
@@ -46,7 +50,8 @@ class MetricsPlotter:
     def _load_csv(self):
         self.df = pd.read_csv(self.csv_file, sep=";")
         self.df['timestamp'] = pd.to_datetime(self.df['timestamp'], unit="s")
-        self.metric_cols = [col for col in self.df.columns if col != 'timestamp']
+        self.metric_cols = [
+            col for col in self.df.columns if col != 'timestamp']
 
     def _compose_filename(self, base_name: str, suffix: str, add_timestamp: bool = True) -> str:
         """Compose a filename without output_dir, PlotStyler will handle the directory."""
@@ -90,7 +95,8 @@ class MetricsPlotter:
         colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
         for i, col in enumerate(self.metric_cols):
-            ax.plot(self.df['timestamp'], self.df[col], marker=markers[i % len(markers)], color=colors[i % len(colors)], label=col)
+            ax.plot(self.df['timestamp'], self.df[col], marker=markers[i % len(
+                markers)], color=colors[i % len(colors)], label=col)
 
         ax.set_title("Metrics Over Time")
         ax.set_xlabel("Timestamp")
@@ -111,7 +117,8 @@ class MetricsPlotter:
         colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
         for i, col in enumerate(self.metric_cols):
-            line, = ax.plot([], [], marker=markers[i % len(markers)], color=colors[i % len(colors)], label=col)
+            line, = ax.plot([], [], marker=markers[i % len(markers)],
+                            color=colors[i % len(colors)], label=col)
             lines.append(line)
 
         ax.set_xlabel("Timestamp")
@@ -130,13 +137,16 @@ class MetricsPlotter:
                 end_time = current_data['timestamp'].iloc[-1]
                 start_time = end_time - pd.Timedelta(seconds=time_window)
                 ax.set_xlim(start_time, end_time)
-                visible_data = current_data[current_data['timestamp'] >= start_time]
+                visible_data = current_data[current_data['timestamp']
+                                            >= start_time]
                 ymin = visible_data[self.metric_cols].min().min() - 1
                 ymax = visible_data[self.metric_cols].max().max() + 1
                 ax.set_ylim(ymin, ymax)
             else:
-                ax.set_xlim(self.df['timestamp'].min(), self.df['timestamp'].max())
-                ax.set_ylim(self.df[self.metric_cols].min().min() - 1, self.df[self.metric_cols].max().max() + 1)
+                ax.set_xlim(self.df['timestamp'].min(),
+                            self.df['timestamp'].max())
+                ax.set_ylim(self.df[self.metric_cols].min().min(
+                ) - 1, self.df[self.metric_cols].max().max() + 1)
             return lines
 
         suffix = "animated" if time_window is None else f"animated_window_{time_window}s"
@@ -148,7 +158,8 @@ class MetricsPlotter:
         if not self.verbose:
             self._mpl_logger.setLevel(logging.WARNING)
 
-        ani = FuncAnimation(fig, animate_frame, frames=len(self.df), interval=interval, blit=False, repeat=False)
+        ani = FuncAnimation(fig, animate_frame, frames=len(
+            self.df), interval=interval, blit=False, repeat=False)
         ani.save(output_path, writer="pillow", fps=1000//interval)
         print(f"✅ Plot saved: {output_path}")
 
